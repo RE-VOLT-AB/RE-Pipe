@@ -11,8 +11,6 @@
   :root{--bg:#0f1a10;--bg2:#141a14;--card:#1e2a1e;--border:rgba(255,204,0,0.15);--accent:#ffcc00;--accent-dim:rgba(255,204,0,0.1);--text:#ffffff;--dim:rgba(255,255,255,0.55);--muted:rgba(255,255,255,0.28);--danger:#ff5c5c;--success:#4caf7d}
   *{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent}
   body{background:var(--bg);color:var(--text);font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;min-height:100vh;padding-bottom:48px}
-
-  /* ── LOCK SCREEN ── */
   #lock{position:fixed;inset:0;background:var(--bg);z-index:999;display:flex;align-items:center;justify-content:center;padding:24px}
   .lock-box{width:100%;max-width:340px;text-align:center}
   .lock-logo{font-size:13px;font-weight:700;letter-spacing:.12em;color:var(--accent);margin-bottom:32px}
@@ -24,8 +22,6 @@
   .lock-btn{width:100%;margin-top:12px;padding:14px;font-size:15px;font-weight:700;background:var(--accent);color:#1a1000;border:none;border-radius:10px;cursor:pointer;font-family:inherit}
   .lock-btn:active{opacity:.8}
   .lock-error{font-size:13px;color:var(--danger);margin-top:10px;min-height:20px}
-
-  /* ── APP ── */
   #app{display:none}
   header{background:var(--bg2);border-bottom:1px solid var(--border);padding:14px 18px;display:flex;align-items:center;justify-content:space-between;position:sticky;top:0;z-index:20}
   .header-title{font-size:15px;font-weight:700;letter-spacing:.05em;color:var(--accent)}
@@ -81,8 +77,16 @@
   .card-expand{margin-top:12px;padding-top:10px;border-top:1px solid rgba(255,255,255,0.07)}
   .detail-row{font-size:12px;color:var(--dim);margin-bottom:5px;display:flex;align-items:flex-start;gap:6px}
   .detail-row i{font-size:13px;flex-shrink:0;margin-top:1px}
-  .card-note-text{font-size:12px;color:var(--dim);font-style:italic;line-height:1.5;margin-bottom:8px}
   .card-actions{display:flex;flex-wrap:wrap;gap:6px;margin-top:10px}
+
+  /* Antecknings-logg */
+  .note-log{margin-top:10px;display:grid;gap:6px}
+  .note-entry{background:rgba(255,255,255,0.04);border-left:2px solid var(--accent-dim);border-radius:0 6px 6px 0;padding:8px 10px}
+  .note-entry-date{font-size:10px;color:var(--accent);font-weight:600;letter-spacing:.04em;margin-bottom:3px}
+  .note-entry-text{font-size:12px;color:var(--dim);line-height:1.5}
+  .note-entry-del{float:right;background:none;border:none;color:var(--muted);cursor:pointer;font-size:12px;padding:0 0 0 8px;line-height:1}
+  .note-entry-del:hover{color:var(--danger)}
+
   .form-card{background:var(--card);border:1px solid var(--accent);border-radius:12px;padding:16px;margin-bottom:20px}
   .form-title{font-size:14px;font-weight:700;margin-bottom:14px;color:var(--accent);display:flex;align-items:center;gap:6px}
   .field{margin-bottom:10px}
@@ -101,7 +105,6 @@
 </head>
 <body>
 
-<!-- LOCK SCREEN -->
 <div id="lock">
   <div class="lock-box">
     <div class="lock-logo">RE-VOLT</div>
@@ -114,7 +117,6 @@
   </div>
 </div>
 
-<!-- APP -->
 <div id="app">
   <header>
     <div class="header-title">RE-VOLT · Pipeline</div>
@@ -136,20 +138,20 @@
 
 <script>
 // ── ÄNDRA DESSA TVÅ RADER ────────────────────────────────────────────
-const PASSWORD    = 'ProspekteraMera777';
-const SCRIPT_URL  = 'https://script.google.com/macros/s/AKfycbzz0f8rQOBY44FYNFOIezpAcNr4AB8umxBJ1O8r3D-y6DlB_MbqBSLTOOybnwuvNAte/exec';
+const PASSWORD   = 'ProspekteraMera777';
+const SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbzz0f8rQOBY44FYNFOIezpAcNr4AB8umxBJ1O8r3D-y6DlB_MbqBSLTOOybnwuvNAte/exec';
 // ────────────────────────────────────────────────────────────────────
 
 const SESSION_KEY = 'rv-unlocked';
 const CACHE_KEY   = 'revolt-pipeline-cache';
 const STAGES = [
-  {label:'Ny',          icon:'ti-user-plus',    next:'Följ + klicka ringklockan',       wait:0},
-  {label:'Följer',      icon:'ti-bell',          next:'Gilla eller kommentera kort',      wait:1},
-  {label:'Kommentar 1', icon:'ti-thumb-up',      next:'Gilla + kommentera kort igen',     wait:1},
-  {label:'Kommentar 2', icon:'ti-messages',      next:'Skarp kommentar med en fråga',     wait:2},
-  {label:'Dialog',      icon:'ti-flame',         next:'Bjud in till samtal',              wait:2},
-  {label:'Bjuden in',   icon:'ti-send',          next:'Väntar på svar',                   wait:0},
-  {label:'Bokad',       icon:'ti-calendar-check',next:'',                                 wait:0},
+  {label:'Ny',          icon:'ti-user-plus',     next:'Följ + klicka ringklockan',      wait:0},
+  {label:'Följer',      icon:'ti-bell',           next:'Gilla eller kommentera kort',     wait:1},
+  {label:'Kommentar 1', icon:'ti-thumb-up',       next:'Gilla + kommentera kort igen',    wait:1},
+  {label:'Kommentar 2', icon:'ti-messages',       next:'Skarp kommentar med en fråga',    wait:2},
+  {label:'Dialog',      icon:'ti-flame',          next:'Bjud in till samtal',             wait:2},
+  {label:'Bjuden in',   icon:'ti-send',           next:'Väntar på svar',                  wait:0},
+  {label:'Bokad',       icon:'ti-calendar-check', next:'',                                wait:0},
 ];
 
 let prospects=[],expandedId=null,addOpen=false,noteId=null;
@@ -157,9 +159,9 @@ const configured = SCRIPT_URL !== 'KLISTRA_IN_DIN_APPS_SCRIPT_URL_HÄR';
 
 /* ── LÖSENORD ── */
 function tryUnlock(){
-  const input = document.getElementById('pw-input').value;
-  if(input === PASSWORD){
-    sessionStorage.setItem(SESSION_KEY,'1');
+  const input=document.getElementById('pw-input').value;
+  if(input===PASSWORD){
+    localStorage.setItem(SESSION_KEY,'1');
     document.getElementById('lock').style.display='none';
     document.getElementById('app').style.display='block';
     loadData();
@@ -169,14 +171,8 @@ function tryUnlock(){
     document.getElementById('pw-input').focus();
   }
 }
-
-// Enter-tangent på lösenordsfältet
-document.getElementById('pw-input').addEventListener('keydown', e => {
-  if(e.key==='Enter') tryUnlock();
-});
-
-// Kolla om redan upplåst i denna session
-if(sessionStorage.getItem(SESSION_KEY)==='1'){
+document.getElementById('pw-input').addEventListener('keydown',e=>{if(e.key==='Enter')tryUnlock();});
+if(localStorage.getItem(SESSION_KEY)==='1'){
   document.getElementById('lock').style.display='none';
   document.getElementById('app').style.display='block';
   loadData();
@@ -184,13 +180,33 @@ if(sessionStorage.getItem(SESSION_KEY)==='1'){
 
 /* ── DATUM ── */
 function today(){return new Date().toISOString().split('T')[0]}
+function fmtDate(s){return new Date(s+'T12:00:00').toLocaleDateString('sv-SE',{day:'numeric',month:'short',year:'numeric'})}
+function fmtShort(s){return new Date(s+'T12:00:00').toLocaleDateString('sv-SE',{day:'numeric',month:'short'})}
 function skipWE(s){const d=new Date(s+'T12:00:00');if(d.getDay()===6)d.setDate(d.getDate()+2);else if(d.getDay()===0)d.setDate(d.getDate()+1);return d.toISOString().split('T')[0]}
 function addDays(s,n){const d=new Date(s+'T12:00:00');d.setDate(d.getDate()+n);return skipWE(d.toISOString().split('T')[0])}
 function diff(s){return Math.round((new Date(s+'T12:00:00')-new Date(today()+'T12:00:00'))/864e5)}
-function fmt(s){return new Date(s+'T12:00:00').toLocaleDateString('sv-SE',{day:'numeric',month:'short'})}
 function uid(){return Date.now()+Math.random().toString(36).slice(2,6)}
 function esc(s){return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;')}
 function val(id){const e=document.getElementById(id);return e?e.value.trim():''}
+
+/* ── MIGRATION: notes-sträng → array ── */
+function migrateNotes(p){
+  if(!p.notes) return [];
+  if(Array.isArray(p.notes)) return p.notes;
+  // JSON-sträng lagrad i sheets
+  if(typeof p.notes==='string'&&p.notes.startsWith('[')){
+    try{return JSON.parse(p.notes);}catch(e){}
+  }
+  // Gammal enkel textsträng
+  if(typeof p.notes==='string'&&p.notes.trim()){
+    return [{id:uid(),date:p.added||today(),text:p.notes.trim()}];
+  }
+  return [];
+}
+
+function migrate(p){
+  return {anledning:'',prev:null,...p,notes:migrateNotes(p)};
+}
 
 /* ── SYNC ── */
 function setSync(cls,txt){
@@ -199,9 +215,14 @@ function setSync(cls,txt){
   if(l)l.textContent=txt;
 }
 
+// Serialisera prospects för sheets — notes som JSON-sträng
+function serialize(ps){
+  return ps.map(p=>({...p,notes:JSON.stringify(p.notes||[])}));
+}
+
 async function loadData(){
   if(!configured){
-    try{const c=localStorage.getItem(CACHE_KEY);if(c)prospects=JSON.parse(c);}catch(e){}
+    try{const c=localStorage.getItem(CACHE_KEY);if(c)prospects=JSON.parse(c).map(migrate);}catch(e){}
     setSync('','Lokal lagring');render();return;
   }
   setSync('saving','Hämtar...');
@@ -209,12 +230,12 @@ async function loadData(){
     const r=await fetch(SCRIPT_URL);
     const d=await r.json();
     if(Array.isArray(d)){
-      prospects=d;
-      localStorage.setItem(CACHE_KEY,JSON.stringify(d));
+      prospects=d.map(migrate);
+      localStorage.setItem(CACHE_KEY,JSON.stringify(prospects));
       setSync('','Synkad');
     }
   }catch(e){
-    try{const c=localStorage.getItem(CACHE_KEY);if(c)prospects=JSON.parse(c);}catch(e2){}
+    try{const c=localStorage.getItem(CACHE_KEY);if(c)prospects=JSON.parse(c).map(migrate);}catch(e2){}
     setSync('error','Offline – visar cache');
   }
   render();
@@ -225,7 +246,7 @@ async function saveData(){
   if(!configured)return;
   setSync('saving','Sparar...');
   try{
-    await fetch(SCRIPT_URL,{method:'POST',mode:'no-cors',headers:{'Content-Type':'application/json'},body:JSON.stringify({prospects})});
+    await fetch(SCRIPT_URL,{method:'POST',mode:'no-cors',headers:{'Content-Type':'application/json'},body:JSON.stringify({prospects:serialize(prospects)})});
     setSync('','Sparad '+new Date().toLocaleTimeString('sv-SE',{hour:'2-digit',minute:'2-digit'}));
   }catch(e){setSync('error','Fel vid sparning');}
 }
@@ -234,9 +255,10 @@ async function saveData(){
 function addProspect(){
   const name=val('f-name');if(!name){document.getElementById('f-name')?.focus();return;}
   const t=today();
-  prospects.push({id:uid(),name,company:val('f-company'),url:val('f-url'),source:val('f-src'),anledning:val('f-why'),stage:0,added:t,lastAction:t,nextAction:t,notes:'',prev:null});
+  prospects.push({id:uid(),name,company:val('f-company'),url:val('f-url'),source:val('f-src'),anledning:val('f-why'),stage:0,added:t,lastAction:t,nextAction:t,notes:[],prev:null});
   addOpen=false;saveData();render();
 }
+
 function advance(id){
   const p=prospects.find(x=>x.id===id);if(!p||p.stage>=6)return;
   const t=today();
@@ -245,25 +267,41 @@ function advance(id){
   p.nextAction=STAGES[p.stage].wait>0?addDays(t,STAGES[p.stage].wait):t;
   saveData();render();
 }
+
 function undo(id){
   const p=prospects.find(x=>x.id===id);if(!p||!p.prev)return;
   p.stage=p.prev.stage;p.lastAction=p.prev.lastAction;p.nextAction=p.prev.nextAction;p.prev=null;
   saveData();render();
 }
+
 function removeProspect(id){
   if(!confirm('Ta bort prospektet?'))return;
   prospects=prospects.filter(p=>p.id!==id);
   if(expandedId===id)expandedId=null;
   saveData();render();
 }
-function openNote(id){noteId=id;addOpen=false;render();}
+
+function openNote(id){noteId=id;addOpen=false;expandedId=id;render();}
+
 function saveNote(){
   const p=prospects.find(x=>x.id===noteId);
-  if(p){const el=document.getElementById('note-text');if(el)p.notes=el.value;}
+  const el=document.getElementById('note-text');
+  if(p&&el&&el.value.trim()){
+    if(!Array.isArray(p.notes))p.notes=[];
+    p.notes.unshift({id:uid(),date:today(),text:el.value.trim()});
+  }
   noteId=null;saveData();render();
 }
+
+function deleteNote(prospectId,noteUid){
+  const p=prospects.find(x=>x.id===prospectId);
+  if(!p)return;
+  p.notes=p.notes.filter(n=>n.id!==noteUid);
+  saveData();render();
+}
+
 function openAdd(){addOpen=!addOpen;noteId=null;render();}
-function toggleExpand(id){expandedId=expandedId===id?null:id;render();}
+function toggleExpand(id){expandedId=expandedId===id?null:id;if(noteId&&expandedId!==noteId)noteId=null;render();}
 
 /* ── RENDER ── */
 function render(){
@@ -295,12 +333,15 @@ function render(){
 
   const np=noteId?prospects.find(p=>p.id===noteId):null;
   if(np)fa+=`<div class="form-card">
-    <div class="form-title"><i class="ti ti-edit"></i> Anteckning — ${esc(np.name)}</div>
-    <div class="field"><textarea id="note-text" placeholder="Vad har hänt? Vad ska du tänka på?">${esc(np.notes||'')}</textarea></div>
+    <div class="form-title"><i class="ti ti-pencil-plus"></i> Ny anteckning — ${esc(np.name)}</div>
+    <div class="field"><label>${fmtDate(today())}</label>
+      <textarea id="note-text" placeholder="Vad hände? Vad sa de? Vad ska du tänka på?"></textarea>
+    </div>
     <div class="form-actions">
-      <button class="btn btn-accent" onclick="saveNote()">Spara</button>
+      <button class="btn btn-accent" onclick="saveNote()">Spara anteckning</button>
       <button class="btn" onclick="noteId=null;render()">Avbryt</button>
     </div></div>`;
+
   document.getElementById('form-area').innerHTML=fa;
 
   let html='';
@@ -328,21 +369,36 @@ function card(p,hot){
   const s=STAGES[p.stage],d=diff(p.nextAction),exp=expandedId===p.id;
   const wknd=(new Date(p.nextAction+'T12:00:00').getDay()===1&&d>1)?' (hoppar helg)':'';
   const urg=p.stage<6?(d<0?`<i class="ti ti-flame urgency flame"></i>`:d===0?`<i class="ti ti-bolt urgency bolt"></i>`:d<=2?`<i class="ti ti-circle-dot urgency soon"></i>`:''):'';
-  const day=d<0?`<span class="overdue">${Math.abs(d)} dag${Math.abs(d)!==1?'ar':''} försenad</span>`:d===0?`<span class="today-lbl">Idag</span>`:`<span>Om ${d} dag${d!==1?'ar':''}${wknd} — ${fmt(p.nextAction)}</span>`;
+  const day=d<0?`<span class="overdue">${Math.abs(d)} dag${Math.abs(d)!==1?'ar':''} försenad</span>`:d===0?`<span class="today-lbl">Idag</span>`:`<span>Om ${d} dag${d!==1?'ar':''}${wknd} — ${fmtShort(p.nextAction)}</span>`;
   const dots=STAGES.map((_,i)=>`<div class="dot ${i<p.stage?'done':i===p.stage?'active':''}"></div>`).join('');
   const cls=hot?'card hot':d===0?'card today':'card';
+  const notes=Array.isArray(p.notes)?p.notes:[];
+  const noteCount=notes.length;
+
   let ex='';
-  if(exp)ex=`<div class="card-expand">
-    ${p.source?`<div class="detail-row"><i class="ti ti-arrow-right"></i><span>Källa: ${esc(p.source)}</span></div>`:''}
-    ${p.anledning?`<div class="detail-row"><i class="ti ti-target"></i><span>${esc(p.anledning)}</span></div>`:''}
-    ${p.notes?`<div class="card-note-text">"${esc(p.notes)}"</div>`:''}
-    <div class="card-actions">
-      ${p.stage<6?`<button class="btn btn-sm btn-accent" onclick="advance('${p.id}')">${p.stage===5?'Boka kalibrering →':'Nästa steg →'}</button>`:''}
-      ${p.prev?`<button class="btn btn-undo" onclick="undo('${p.id}')"><i class="ti ti-arrow-back-up"></i> Ångra</button>`:''}
-      <button class="btn btn-sm" onclick="openNote('${p.id}')"><i class="ti ti-edit"></i> Anteckning</button>
-      ${p.url?`<a href="${esc(p.url)}" class="btn btn-sm" target="_blank"><i class="ti ti-external-link"></i> LinkedIn</a>`:''}
-      <button class="btn btn-sm btn-danger" onclick="removeProspect('${p.id}')"><i class="ti ti-trash"></i> Ta bort</button>
-    </div></div>`;
+  if(exp){
+    const noteLog=noteCount>0
+      ?`<div class="note-log">${notes.map(n=>`
+          <div class="note-entry">
+            <button class="note-entry-del" onclick="deleteNote('${p.id}','${n.id}')" title="Ta bort"><i class="ti ti-x"></i></button>
+            <div class="note-entry-date">${fmtDate(n.date)}</div>
+            <div class="note-entry-text">${esc(n.text)}</div>
+          </div>`).join('')}</div>`
+      :'';
+
+    ex=`<div class="card-expand">
+      ${p.source?`<div class="detail-row"><i class="ti ti-arrow-right"></i><span>Källa: ${esc(p.source)}</span></div>`:''}
+      ${p.anledning?`<div class="detail-row"><i class="ti ti-target"></i><span>${esc(p.anledning)}</span></div>`:''}
+      ${noteLog}
+      <div class="card-actions">
+        ${p.stage<6?`<button class="btn btn-sm btn-accent" onclick="advance('${p.id}')">${p.stage===5?'Boka kalibrering →':'Nästa steg →'}</button>`:''}
+        ${p.prev?`<button class="btn btn-undo" onclick="undo('${p.id}')"><i class="ti ti-arrow-back-up"></i> Ångra</button>`:''}
+        <button class="btn btn-sm" onclick="openNote('${p.id}')"><i class="ti ti-pencil-plus"></i> Lägg till anteckning</button>
+        ${p.url?`<a href="${esc(p.url)}" class="btn btn-sm" target="_blank"><i class="ti ti-external-link"></i> LinkedIn</a>`:''}
+        <button class="btn btn-sm btn-danger" onclick="removeProspect('${p.id}')"><i class="ti ti-trash"></i> Ta bort</button>
+      </div></div>`;
+  }
+
   return`<div class="${cls}">${urg}
     <div class="card-inner"><i class="ti ${s.icon} card-icon ${hot?'hot':''}"></i>
     <div class="card-body">
@@ -350,13 +406,15 @@ function card(p,hot){
         <div class="card-name">${esc(p.name)}</div>
         ${p.company?`<div class="card-company">${esc(p.company)}</div>`:''}
       </div><button class="expand-btn" onclick="toggleExpand('${p.id}')"><i class="ti ${exp?'ti-chevron-up':'ti-chevron-down'}"></i></button></div>
-      <div class="card-tags"><span class="tag ${hot?'tag-stage-hot':'tag-stage'}">${s.label}</span>${p.source?`<span class="tag tag-src">${esc(p.source)}</span>`:''}</div>
+      <div class="card-tags">
+        <span class="tag ${hot?'tag-stage-hot':'tag-stage'}">${s.label}</span>
+        ${p.source?`<span class="tag tag-src">${esc(p.source)}</span>`:''}
+        ${noteCount>0?`<span class="tag" style="background:rgba(255,255,255,0.05);color:var(--muted)"><i class="ti ti-notes" style="font-size:10px"></i> ${noteCount}</span>`:''}
+      </div>
       <div class="card-next">${esc(s.next)} · ${day}</div>
       <div class="dots">${dots}</div>
     </div></div>${ex}</div>`;
 }
-
-// Starta inte appen förrän lösenord är angivet (hanteras ovan)
 </script>
 </body>
 </html>
