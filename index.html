@@ -1,0 +1,362 @@
+<!DOCTYPE html>
+<html lang="sv">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0" />
+<meta name="apple-mobile-web-app-capable" content="yes" />
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+<title>RE-VOLT Pipeline</title>
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@tabler/icons-webfont@latest/tabler-icons.min.css" />
+<style>
+  :root{--bg:#0f1a10;--bg2:#141a14;--card:#1e2a1e;--border:rgba(255,204,0,0.15);--accent:#ffcc00;--accent-dim:rgba(255,204,0,0.1);--text:#ffffff;--dim:rgba(255,255,255,0.55);--muted:rgba(255,255,255,0.28);--danger:#ff5c5c;--success:#4caf7d}
+  *{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent}
+  body{background:var(--bg);color:var(--text);font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;min-height:100vh;padding-bottom:48px}
+
+  /* ── LOCK SCREEN ── */
+  #lock{position:fixed;inset:0;background:var(--bg);z-index:999;display:flex;align-items:center;justify-content:center;padding:24px}
+  .lock-box{width:100%;max-width:340px;text-align:center}
+  .lock-logo{font-size:13px;font-weight:700;letter-spacing:.12em;color:var(--accent);margin-bottom:32px}
+  .lock-icon{font-size:48px;color:var(--dim);margin-bottom:20px}
+  .lock-title{font-size:18px;font-weight:600;margin-bottom:8px}
+  .lock-sub{font-size:13px;color:var(--dim);margin-bottom:28px}
+  .lock-input{width:100%;background:var(--card);border:1px solid var(--border);border-radius:10px;color:var(--text);font-size:18px;font-family:inherit;padding:14px 18px;outline:none;text-align:center;letter-spacing:.1em;-webkit-appearance:none;appearance:none}
+  .lock-input:focus{border-color:var(--accent)}
+  .lock-btn{width:100%;margin-top:12px;padding:14px;font-size:15px;font-weight:700;background:var(--accent);color:#1a1000;border:none;border-radius:10px;cursor:pointer;font-family:inherit}
+  .lock-btn:active{opacity:.8}
+  .lock-error{font-size:13px;color:var(--danger);margin-top:10px;min-height:20px}
+
+  /* ── APP ── */
+  #app{display:none}
+  header{background:var(--bg2);border-bottom:1px solid var(--border);padding:14px 18px;display:flex;align-items:center;justify-content:space-between;position:sticky;top:0;z-index:20}
+  .header-title{font-size:15px;font-weight:700;letter-spacing:.05em;color:var(--accent)}
+  .sync-indicator{font-size:11px;color:var(--dim);display:flex;align-items:center;gap:5px}
+  .sync-dot{width:7px;height:7px;border-radius:50%;background:var(--success);flex-shrink:0}
+  .sync-dot.saving{background:var(--accent);animation:pulse 1s ease-in-out infinite}
+  .sync-dot.error{background:var(--danger)}
+  .wrap{max-width:600px;margin:0 auto;padding:16px}
+  .metrics{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-bottom:20px}
+  .metric{background:var(--card);border:1px solid var(--border);border-radius:10px;padding:12px;text-align:center}
+  .m-label{font-size:11px;color:var(--dim);margin-bottom:4px}
+  .m-val{font-size:24px;font-weight:700}
+  .m-val sub{font-size:12px;color:var(--muted);font-weight:400}
+  .m-warn{color:var(--accent)}.m-ok{color:var(--success)}
+  .toolbar{display:flex;justify-content:space-between;align-items:center;margin-bottom:14px}
+  .toolbar-hint{font-size:12px;color:var(--dim)}
+  .btn{display:inline-flex;align-items:center;gap:6px;padding:9px 16px;font-size:14px;border-radius:8px;border:1px solid rgba(255,255,255,0.15);background:transparent;color:var(--text);cursor:pointer;font-family:inherit}
+  .btn:active{opacity:.65;transform:scale(.97)}
+  .btn-accent{background:var(--accent);color:#1a1000;font-weight:700;border-color:transparent}
+  .btn-sm{padding:7px 12px;font-size:13px}
+  .btn-danger{color:var(--danger);border-color:rgba(255,92,92,0.3)}
+  .btn-undo{color:var(--dim);border-style:dashed;font-size:12px;padding:6px 10px}
+  .section{margin-bottom:24px}
+  .sec-title{font-size:11px;font-weight:700;letter-spacing:.07em;text-transform:uppercase;color:var(--dim);margin-bottom:8px;display:flex;align-items:center;gap:6px}
+  .sec-title.hot{color:var(--danger)}.sec-title.ok{color:var(--success)}
+  .prospect-list{display:grid;gap:8px}
+  .card{background:var(--card);border:1px solid var(--border);border-radius:10px;padding:12px 14px;position:relative}
+  .card.hot{border-color:rgba(255,92,92,0.5);border-left:3px solid var(--danger)}
+  .card.today{border-left:3px solid var(--accent)}
+  .card-inner{display:flex;align-items:flex-start;gap:10px;padding-right:32px}
+  .card-icon{font-size:20px;flex-shrink:0;margin-top:2px;color:var(--dim)}
+  .card-icon.hot{color:var(--danger)}
+  .card-body{flex:1;min-width:0}
+  .card-row1{display:flex;align-items:flex-start;justify-content:space-between;gap:6px}
+  .card-name{font-size:14px;font-weight:600;line-height:1.3}
+  .card-company{font-size:12px;color:var(--dim);margin-top:1px}
+  .card-tags{display:flex;gap:5px;flex-wrap:wrap;margin-top:5px}
+  .tag{font-size:10px;padding:2px 8px;border-radius:99px;font-weight:600}
+  .tag-stage{background:rgba(255,255,255,0.07);color:var(--dim)}
+  .tag-stage-hot{background:rgba(255,92,92,0.14);color:var(--danger)}
+  .tag-src{background:var(--accent-dim);color:var(--accent)}
+  .card-next{font-size:12px;color:var(--dim);margin-top:5px;line-height:1.4}
+  .overdue{color:var(--danger);font-weight:600}.today-lbl{color:var(--accent);font-weight:600}
+  .dots{display:flex;gap:3px;margin-top:6px}
+  .dot{width:7px;height:7px;border-radius:50%;background:rgba(255,255,255,0.1)}
+  .dot.done{background:var(--success)}.dot.active{background:var(--accent)}
+  .urgency{position:absolute;right:12px;top:12px;font-size:22px;pointer-events:none}
+  .urgency.flame{color:var(--danger);animation:pulse 1.4s ease-in-out infinite}
+  .urgency.bolt{color:var(--accent)}
+  .urgency.soon{color:var(--muted);font-size:16px;top:15px}
+  @keyframes pulse{0%,100%{opacity:1}50%{opacity:.3}}
+  .expand-btn{background:transparent;border:none;color:var(--dim);cursor:pointer;padding:4px 6px;font-size:18px;flex-shrink:0;margin-top:-2px}
+  .card-expand{margin-top:12px;padding-top:10px;border-top:1px solid rgba(255,255,255,0.07)}
+  .detail-row{font-size:12px;color:var(--dim);margin-bottom:5px;display:flex;align-items:flex-start;gap:6px}
+  .detail-row i{font-size:13px;flex-shrink:0;margin-top:1px}
+  .card-note-text{font-size:12px;color:var(--dim);font-style:italic;line-height:1.5;margin-bottom:8px}
+  .card-actions{display:flex;flex-wrap:wrap;gap:6px;margin-top:10px}
+  .form-card{background:var(--card);border:1px solid var(--accent);border-radius:12px;padding:16px;margin-bottom:20px}
+  .form-title{font-size:14px;font-weight:700;margin-bottom:14px;color:var(--accent);display:flex;align-items:center;gap:6px}
+  .field{margin-bottom:10px}
+  .field label{display:block;font-size:11px;color:var(--dim);margin-bottom:5px;letter-spacing:.05em;text-transform:uppercase}
+  input[type=text],input[type=url],input[type=password],textarea{width:100%;background:rgba(255,255,255,0.05);border:1px solid rgba(255,255,255,0.15);border-radius:8px;color:var(--text);font-size:16px;font-family:inherit;padding:12px 14px;outline:none;-webkit-appearance:none;appearance:none}
+  input:focus,textarea:focus{border-color:var(--accent)}
+  textarea{resize:vertical;min-height:80px}
+  .form-actions{display:flex;gap:8px;margin-top:14px}
+  .form-actions .btn{flex:1;justify-content:center;padding:13px;font-size:15px}
+  .booked-row{display:flex;justify-content:space-between;align-items:center;background:var(--card);border:1px solid var(--border);border-radius:10px;padding:12px 14px}
+  .booked-left{display:flex;align-items:center;gap:8px;flex-wrap:wrap}
+  .empty{text-align:center;color:var(--dim);padding:40px 20px;font-size:14px;line-height:1.9}
+  .empty i{font-size:40px;display:block;margin-bottom:12px;color:var(--muted)}
+  a.btn{text-decoration:none}
+</style>
+</head>
+<body>
+
+<!-- LOCK SCREEN -->
+<div id="lock">
+  <div class="lock-box">
+    <div class="lock-logo">RE-VOLT</div>
+    <div class="lock-icon"><i class="ti ti-lock"></i></div>
+    <div class="lock-title">Pipeline</div>
+    <div class="lock-sub">Ange lösenord för att fortsätta</div>
+    <input class="lock-input" type="password" id="pw-input" placeholder="••••••••" autocomplete="current-password" />
+    <button class="lock-btn" onclick="tryUnlock()">Öppna</button>
+    <div class="lock-error" id="pw-error"></div>
+  </div>
+</div>
+
+<!-- APP -->
+<div id="app">
+  <header>
+    <div class="header-title">RE-VOLT · Pipeline</div>
+    <div class="sync-indicator">
+      <div class="sync-dot" id="sync-dot"></div>
+      <span id="sync-label">Laddar</span>
+    </div>
+  </header>
+  <div class="wrap">
+    <div class="metrics" id="metrics"></div>
+    <div class="toolbar">
+      <span class="toolbar-hint">Michel-metoden · mål 30–40 aktiva</span>
+      <button class="btn btn-accent" onclick="openAdd()"><i class="ti ti-plus"></i> Lägg till</button>
+    </div>
+    <div id="form-area"></div>
+    <div id="list"></div>
+  </div>
+</div>
+
+<script>
+// ── ÄNDRA DESSA TVÅ RADER ────────────────────────────────────────────
+const PASSWORD    = 'ProspekteraMera777';
+const SCRIPT_URL  = 'https://script.google.com/macros/s/AKfycbzz0f8rQOBY44FYNFOIezpAcNr4AB8umxBJ1O8r3D-y6DlB_MbqBSLTOOybnwuvNAte/exec';
+// ────────────────────────────────────────────────────────────────────
+
+const SESSION_KEY = 'rv-unlocked';
+const CACHE_KEY   = 'revolt-pipeline-cache';
+const STAGES = [
+  {label:'Ny',          icon:'ti-user-plus',    next:'Följ + klicka ringklockan',       wait:0},
+  {label:'Följer',      icon:'ti-bell',          next:'Gilla eller kommentera kort',      wait:1},
+  {label:'Kommentar 1', icon:'ti-thumb-up',      next:'Gilla + kommentera kort igen',     wait:1},
+  {label:'Kommentar 2', icon:'ti-messages',      next:'Skarp kommentar med en fråga',     wait:2},
+  {label:'Dialog',      icon:'ti-flame',         next:'Bjud in till samtal',              wait:2},
+  {label:'Bjuden in',   icon:'ti-send',          next:'Väntar på svar',                   wait:0},
+  {label:'Bokad',       icon:'ti-calendar-check',next:'',                                 wait:0},
+];
+
+let prospects=[],expandedId=null,addOpen=false,noteId=null;
+const configured = SCRIPT_URL !== 'KLISTRA_IN_DIN_APPS_SCRIPT_URL_HÄR';
+
+/* ── LÖSENORD ── */
+function tryUnlock(){
+  const input = document.getElementById('pw-input').value;
+  if(input === PASSWORD){
+    sessionStorage.setItem(SESSION_KEY,'1');
+    document.getElementById('lock').style.display='none';
+    document.getElementById('app').style.display='block';
+    loadData();
+  } else {
+    document.getElementById('pw-error').textContent='Fel lösenord. Försök igen.';
+    document.getElementById('pw-input').value='';
+    document.getElementById('pw-input').focus();
+  }
+}
+
+// Enter-tangent på lösenordsfältet
+document.getElementById('pw-input').addEventListener('keydown', e => {
+  if(e.key==='Enter') tryUnlock();
+});
+
+// Kolla om redan upplåst i denna session
+if(sessionStorage.getItem(SESSION_KEY)==='1'){
+  document.getElementById('lock').style.display='none';
+  document.getElementById('app').style.display='block';
+  loadData();
+}
+
+/* ── DATUM ── */
+function today(){return new Date().toISOString().split('T')[0]}
+function skipWE(s){const d=new Date(s+'T12:00:00');if(d.getDay()===6)d.setDate(d.getDate()+2);else if(d.getDay()===0)d.setDate(d.getDate()+1);return d.toISOString().split('T')[0]}
+function addDays(s,n){const d=new Date(s+'T12:00:00');d.setDate(d.getDate()+n);return skipWE(d.toISOString().split('T')[0])}
+function diff(s){return Math.round((new Date(s+'T12:00:00')-new Date(today()+'T12:00:00'))/864e5)}
+function fmt(s){return new Date(s+'T12:00:00').toLocaleDateString('sv-SE',{day:'numeric',month:'short'})}
+function uid(){return Date.now()+Math.random().toString(36).slice(2,6)}
+function esc(s){return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;')}
+function val(id){const e=document.getElementById(id);return e?e.value.trim():''}
+
+/* ── SYNC ── */
+function setSync(cls,txt){
+  const d=document.getElementById('sync-dot'),l=document.getElementById('sync-label');
+  if(d)d.className='sync-dot'+(cls?' '+cls:'');
+  if(l)l.textContent=txt;
+}
+
+async function loadData(){
+  if(!configured){
+    try{const c=localStorage.getItem(CACHE_KEY);if(c)prospects=JSON.parse(c);}catch(e){}
+    setSync('','Lokal lagring');render();return;
+  }
+  setSync('saving','Hämtar...');
+  try{
+    const r=await fetch(SCRIPT_URL);
+    const d=await r.json();
+    if(Array.isArray(d)){
+      prospects=d;
+      localStorage.setItem(CACHE_KEY,JSON.stringify(d));
+      setSync('','Synkad');
+    }
+  }catch(e){
+    try{const c=localStorage.getItem(CACHE_KEY);if(c)prospects=JSON.parse(c);}catch(e2){}
+    setSync('error','Offline – visar cache');
+  }
+  render();
+}
+
+async function saveData(){
+  localStorage.setItem(CACHE_KEY,JSON.stringify(prospects));
+  if(!configured)return;
+  setSync('saving','Sparar...');
+  try{
+    await fetch(SCRIPT_URL,{method:'POST',mode:'no-cors',headers:{'Content-Type':'application/json'},body:JSON.stringify({prospects})});
+    setSync('','Sparad '+new Date().toLocaleTimeString('sv-SE',{hour:'2-digit',minute:'2-digit'}));
+  }catch(e){setSync('error','Fel vid sparning');}
+}
+
+/* ── DATA-OPS ── */
+function addProspect(){
+  const name=val('f-name');if(!name){document.getElementById('f-name')?.focus();return;}
+  const t=today();
+  prospects.push({id:uid(),name,company:val('f-company'),url:val('f-url'),source:val('f-src'),anledning:val('f-why'),stage:0,added:t,lastAction:t,nextAction:t,notes:'',prev:null});
+  addOpen=false;saveData();render();
+}
+function advance(id){
+  const p=prospects.find(x=>x.id===id);if(!p||p.stage>=6)return;
+  const t=today();
+  p.prev={stage:p.stage,lastAction:p.lastAction,nextAction:p.nextAction};
+  p.stage++;p.lastAction=t;
+  p.nextAction=STAGES[p.stage].wait>0?addDays(t,STAGES[p.stage].wait):t;
+  saveData();render();
+}
+function undo(id){
+  const p=prospects.find(x=>x.id===id);if(!p||!p.prev)return;
+  p.stage=p.prev.stage;p.lastAction=p.prev.lastAction;p.nextAction=p.prev.nextAction;p.prev=null;
+  saveData();render();
+}
+function removeProspect(id){
+  if(!confirm('Ta bort prospektet?'))return;
+  prospects=prospects.filter(p=>p.id!==id);
+  if(expandedId===id)expandedId=null;
+  saveData();render();
+}
+function openNote(id){noteId=id;addOpen=false;render();}
+function saveNote(){
+  const p=prospects.find(x=>x.id===noteId);
+  if(p){const el=document.getElementById('note-text');if(el)p.notes=el.value;}
+  noteId=null;saveData();render();
+}
+function openAdd(){addOpen=!addOpen;noteId=null;render();}
+function toggleExpand(id){expandedId=expandedId===id?null:id;render();}
+
+/* ── RENDER ── */
+function render(){
+  const t=today();
+  const active=prospects.filter(p=>p.stage<6);
+  const booked=prospects.filter(p=>p.stage===6);
+  const overdue=active.filter(p=>p.nextAction<t);
+  const dueToday=active.filter(p=>p.nextAction===t);
+  const upcoming=active.filter(p=>p.nextAction>t);
+  const hot=overdue.length+dueToday.length;
+
+  document.getElementById('metrics').innerHTML=`
+    <div class="metric"><div class="m-label">Aktiva</div><div class="m-val">${active.length}<sub>/40</sub></div></div>
+    <div class="metric"><div class="m-label">Att göra nu</div><div class="m-val m-warn">${hot}</div></div>
+    <div class="metric"><div class="m-label">Bokade</div><div class="m-val m-ok">${booked.length}</div></div>`;
+
+  let fa='';
+  if(addOpen)fa=`<div class="form-card">
+    <div class="form-title"><i class="ti ti-user-plus"></i> Nytt prospekt</div>
+    <div class="field"><label>Namn *</label><input type="text" id="f-name" autocomplete="off" placeholder="För- och efternamn"/></div>
+    <div class="field"><label>Företag</label><input type="text" id="f-company" autocomplete="off" placeholder="Företagsnamn"/></div>
+    <div class="field"><label>LinkedIn-URL</label><input type="url" id="f-url" inputmode="url" placeholder="https://linkedin.com/in/..."/></div>
+    <div class="field"><label>Hur kom du i kontakt?</label><input type="text" id="f-src" autocomplete="off" placeholder="ex: via Karin, webbinarie, kallt samtal"/></div>
+    <div class="field"><label>Varför prospekterar du den här personen?</label><input type="text" id="f-why" autocomplete="off" placeholder="ex: etablerad entreprenör, passar RE-Kalibrering"/></div>
+    <div class="form-actions">
+      <button class="btn btn-accent" onclick="addProspect()">Lägg till</button>
+      <button class="btn" onclick="addOpen=false;render()">Avbryt</button>
+    </div></div>`;
+
+  const np=noteId?prospects.find(p=>p.id===noteId):null;
+  if(np)fa+=`<div class="form-card">
+    <div class="form-title"><i class="ti ti-edit"></i> Anteckning — ${esc(np.name)}</div>
+    <div class="field"><textarea id="note-text" placeholder="Vad har hänt? Vad ska du tänka på?">${esc(np.notes||'')}</textarea></div>
+    <div class="form-actions">
+      <button class="btn btn-accent" onclick="saveNote()">Spara</button>
+      <button class="btn" onclick="noteId=null;render()">Avbryt</button>
+    </div></div>`;
+  document.getElementById('form-area').innerHTML=fa;
+
+  let html='';
+  if(hot>0){
+    const s=[...overdue,...dueToday].sort((a,b)=>a.nextAction.localeCompare(b.nextAction));
+    html+=`<div class="section"><div class="sec-title hot"><i class="ti ti-alert-triangle"></i> Att göra nu · ${hot} st</div><div class="prospect-list">${s.map(p=>card(p,true)).join('')}</div></div>`;
+  }
+  if(upcoming.length>0){
+    const s=[...upcoming].sort((a,b)=>a.nextAction.localeCompare(b.nextAction));
+    html+=`<div class="section"><div class="sec-title"><i class="ti ti-clock"></i> Kommande · ${upcoming.length} st</div><div class="prospect-list">${s.map(p=>card(p,false)).join('')}</div></div>`;
+  }
+  if(booked.length>0){
+    html+=`<div class="section"><div class="sec-title ok"><i class="ti ti-calendar-check"></i> Bokade · ${booked.length} st</div><div class="prospect-list">${booked.map(p=>`
+      <div class="booked-row"><div class="booked-left">
+        <span style="font-weight:600">${esc(p.name)}</span>
+        ${p.company?`<span style="font-size:12px;color:var(--dim)">${esc(p.company)}</span>`:''}
+        ${p.source?`<span class="tag tag-src">${esc(p.source)}</span>`:''}
+      </div><button class="btn btn-sm btn-danger" onclick="removeProspect('${p.id}')"><i class="ti ti-trash"></i></button></div>`).join('')}</div></div>`;
+  }
+  if(prospects.length===0&&!addOpen)html=`<div class="empty"><i class="ti ti-users"></i>Inga prospekt ännu.<br>Lägg till din första och starta pipeline.</div>`;
+  document.getElementById('list').innerHTML=html;
+}
+
+function card(p,hot){
+  const s=STAGES[p.stage],d=diff(p.nextAction),exp=expandedId===p.id;
+  const wknd=(new Date(p.nextAction+'T12:00:00').getDay()===1&&d>1)?' (hoppar helg)':'';
+  const urg=p.stage<6?(d<0?`<i class="ti ti-flame urgency flame"></i>`:d===0?`<i class="ti ti-bolt urgency bolt"></i>`:d<=2?`<i class="ti ti-circle-dot urgency soon"></i>`:''):'';
+  const day=d<0?`<span class="overdue">${Math.abs(d)} dag${Math.abs(d)!==1?'ar':''} försenad</span>`:d===0?`<span class="today-lbl">Idag</span>`:`<span>Om ${d} dag${d!==1?'ar':''}${wknd} — ${fmt(p.nextAction)}</span>`;
+  const dots=STAGES.map((_,i)=>`<div class="dot ${i<p.stage?'done':i===p.stage?'active':''}"></div>`).join('');
+  const cls=hot?'card hot':d===0?'card today':'card';
+  let ex='';
+  if(exp)ex=`<div class="card-expand">
+    ${p.source?`<div class="detail-row"><i class="ti ti-arrow-right"></i><span>Källa: ${esc(p.source)}</span></div>`:''}
+    ${p.anledning?`<div class="detail-row"><i class="ti ti-target"></i><span>${esc(p.anledning)}</span></div>`:''}
+    ${p.notes?`<div class="card-note-text">"${esc(p.notes)}"</div>`:''}
+    <div class="card-actions">
+      ${p.stage<6?`<button class="btn btn-sm btn-accent" onclick="advance('${p.id}')">${p.stage===5?'Boka kalibrering →':'Nästa steg →'}</button>`:''}
+      ${p.prev?`<button class="btn btn-undo" onclick="undo('${p.id}')"><i class="ti ti-arrow-back-up"></i> Ångra</button>`:''}
+      <button class="btn btn-sm" onclick="openNote('${p.id}')"><i class="ti ti-edit"></i> Anteckning</button>
+      ${p.url?`<a href="${esc(p.url)}" class="btn btn-sm" target="_blank"><i class="ti ti-external-link"></i> LinkedIn</a>`:''}
+      <button class="btn btn-sm btn-danger" onclick="removeProspect('${p.id}')"><i class="ti ti-trash"></i> Ta bort</button>
+    </div></div>`;
+  return`<div class="${cls}">${urg}
+    <div class="card-inner"><i class="ti ${s.icon} card-icon ${hot?'hot':''}"></i>
+    <div class="card-body">
+      <div class="card-row1"><div>
+        <div class="card-name">${esc(p.name)}</div>
+        ${p.company?`<div class="card-company">${esc(p.company)}</div>`:''}
+      </div><button class="expand-btn" onclick="toggleExpand('${p.id}')"><i class="ti ${exp?'ti-chevron-up':'ti-chevron-down'}"></i></button></div>
+      <div class="card-tags"><span class="tag ${hot?'tag-stage-hot':'tag-stage'}">${s.label}</span>${p.source?`<span class="tag tag-src">${esc(p.source)}</span>`:''}</div>
+      <div class="card-next">${esc(s.next)} · ${day}</div>
+      <div class="dots">${dots}</div>
+    </div></div>${ex}</div>`;
+}
+
+// Starta inte appen förrän lösenord är angivet (hanteras ovan)
+</script>
+</body>
+</html>
