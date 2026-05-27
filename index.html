@@ -78,6 +78,8 @@
   .detail-row{font-size:12px;color:var(--dim);margin-bottom:5px;display:flex;align-items:flex-start;gap:6px}
   .detail-row i{font-size:13px;flex-shrink:0;margin-top:1px}
   .card-actions{display:flex;flex-wrap:wrap;gap:6px;margin-top:10px}
+  .postpone-menu{display:flex;flex-wrap:wrap;gap:6px;margin-top:6px;padding:8px 10px;background:rgba(255,204,0,0.05);border-radius:8px;border:1px solid var(--border)}
+  .postpone-label{font-size:11px;color:var(--dim);width:100%;margin-bottom:2px}
 
   /* Antecknings-logg */
   .note-log{margin-top:10px;display:grid;gap:6px}
@@ -154,7 +156,7 @@ const STAGES = [
   {label:'Bokad',       icon:'ti-calendar-check', next:'',                                wait:0},
 ];
 
-let prospects=[],expandedId=null,addOpen=false,noteId=null;
+let prospects=[],expandedId=null,addOpen=false,noteId=null,postponeId=null;
 const configured = SCRIPT_URL !== 'KLISTRA_IN_DIN_APPS_SCRIPT_URL_HÄR';
 
 /* ── LÖSENORD ── */
@@ -322,6 +324,14 @@ function undo(id){
   saveData();render();
 }
 
+function postpone(id, days){
+  const p=prospects.find(x=>x.id===id);if(!p)return;
+  const base=diff(p.nextAction)<0?today():p.nextAction;
+  p.nextAction=addDays(base,days);
+  postponeId=null;
+  saveData();render();
+}
+
 function removeProspect(id){
   if(!confirm('Ta bort prospektet?'))return;
   prospects=prospects.filter(p=>p.id!==id);
@@ -441,10 +451,19 @@ function card(p,hot){
       <div class="card-actions">
         ${p.stage<6?`<button class="btn btn-sm btn-accent" onclick="advance('${p.id}')">${p.stage===5?'Boka kalibrering →':'Nästa steg →'}</button>`:''}
         ${p.prev?`<button class="btn btn-undo" onclick="undo('${p.id}')"><i class="ti ti-arrow-back-up"></i> Ångra</button>`:''}
+        <button class="btn btn-sm" onclick="postponeId=postponeId==='${p.id}'?null:'${p.id}';render()"><i class="ti ti-clock-pause"></i> Förskjut</button>
         <button class="btn btn-sm" onclick="openNote('${p.id}')"><i class="ti ti-pencil-plus"></i> Lägg till anteckning</button>
         ${p.url?`<a href="${esc(p.url)}" class="btn btn-sm" target="_blank"><i class="ti ti-external-link"></i> LinkedIn</a>`:''}
         <button class="btn btn-sm btn-danger" onclick="removeProspect('${p.id}')"><i class="ti ti-trash"></i> Ta bort</button>
-      </div></div>`;
+      </div>
+      ${postponeId===p.id?`<div class="postpone-menu">
+        <div class="postpone-label">Skjut upp nästa steg till:</div>
+        <button class="btn btn-sm" onclick="postpone('${p.id}',3)">3 dagar</button>
+        <button class="btn btn-sm" onclick="postpone('${p.id}',7)">1 vecka</button>
+        <button class="btn btn-sm" onclick="postpone('${p.id}',14)">2 veckor</button>
+        <button class="btn btn-sm" onclick="postpone('${p.id}',30)">1 månad</button>
+      </div>`:''}
+    </div></div>`;
   }
 
   return`<div class="${cls}">${urg}
