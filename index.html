@@ -180,11 +180,50 @@ if(localStorage.getItem(SESSION_KEY)==='1'){
 
 /* ── DATUM ── */
 function today(){return new Date().toISOString().split('T')[0]}
-function fmtDate(s){return new Date(s+'T12:00:00').toLocaleDateString('sv-SE',{day:'numeric',month:'short',year:'numeric'})}
-function fmtShort(s){return new Date(s+'T12:00:00').toLocaleDateString('sv-SE',{day:'numeric',month:'short'})}
-function skipWE(s){const d=new Date(s+'T12:00:00');if(d.getDay()===6)d.setDate(d.getDate()+2);else if(d.getDay()===0)d.setDate(d.getDate()+1);return d.toISOString().split('T')[0]}
-function addDays(s,n){const d=new Date(s+'T12:00:00');d.setDate(d.getDate()+n);return skipWE(d.toISOString().split('T')[0])}
-function diff(s){return Math.round((new Date(s+'T12:00:00')-new Date(today()+'T12:00:00'))/864e5)}
+
+// Normaliserar datum från Sheets (kan vara "2026-05-27", "27/5/2026", Date-objekt osv) → "YYYY-MM-DD"
+function normalizeDate(s){
+  if(!s) return today();
+  if(s instanceof Date) return s.toISOString().split('T')[0];
+  s = String(s).trim();
+  // redan YYYY-MM-DD
+  if(/^\d{4}-\d{2}-\d{2}/.test(s)) return s.slice(0,10);
+  // försök parsa övriga format
+  const d = new Date(s);
+  if(!isNaN(d.getTime())) return d.toISOString().split('T')[0];
+  return today();
+}
+
+function toDate(s){
+  const nd = normalizeDate(s);
+  return new Date(nd+'T12:00:00');
+}
+
+function fmtDate(s){
+  const d=toDate(s);
+  if(isNaN(d.getTime())) return '';
+  return d.toLocaleDateString('sv-SE',{day:'numeric',month:'short',year:'numeric'});
+}
+function fmtShort(s){
+  const d=toDate(s);
+  if(isNaN(d.getTime())) return '';
+  return d.toLocaleDateString('sv-SE',{day:'numeric',month:'short'});
+}
+function skipWE(s){
+  const d=toDate(s);
+  if(d.getDay()===6)d.setDate(d.getDate()+2);
+  else if(d.getDay()===0)d.setDate(d.getDate()+1);
+  return d.toISOString().split('T')[0];
+}
+function addDays(s,n){
+  const d=toDate(s);d.setDate(d.getDate()+n);
+  return skipWE(d.toISOString().split('T')[0]);
+}
+function diff(s){
+  const d=toDate(s),t=toDate(today());
+  if(isNaN(d.getTime())) return 0;
+  return Math.round((d-t)/864e5);
+}
 function uid(){return Date.now()+Math.random().toString(36).slice(2,6)}
 function esc(s){return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;')}
 function val(id){const e=document.getElementById(id);return e?e.value.trim():''}
@@ -192,20 +231,29 @@ function val(id){const e=document.getElementById(id);return e?e.value.trim():''}
 /* ── MIGRATION: notes-sträng → array ── */
 function migrateNotes(p){
   if(!p.notes) return [];
-  if(Array.isArray(p.notes)) return p.notes;
-  // JSON-sträng lagrad i sheets
-  if(typeof p.notes==='string'&&p.notes.startsWith('[')){
-    try{return JSON.parse(p.notes);}catch(e){}
-  }
-  // Gammal enkel textsträng
-  if(typeof p.notes==='string'&&p.notes.trim()){
-    return [{id:uid(),date:p.added||today(),text:p.notes.trim()}];
+  if(Array.isArray(p.notes)) return p.notes.map(n=>({...n,date:normalizeDate(n.date)}));
+  if(typeof p.notes==='string'){
+    const trimmed=p.notes.trim();
+    if(!trimmed||trimmed==='[]') return [];
+    if(trimmed.startsWith('[')){
+      try{
+        const parsed=JSON.parse(trimmed);
+        if(Array.isArray(parsed)) return parsed.map(n=>({...n,date:normalizeDate(n.date)}));
+      }catch(e){}
+    }
+    if(trimmed) return [{id:uid(),date:normalizeDate(p.added),text:trimmed}];
   }
   return [];
 }
 
 function migrate(p){
-  return {anledning:'',prev:null,...p,notes:migrateNotes(p)};
+  return {
+    anledning:'',prev:null,...p,
+    added:     normalizeDate(p.added),
+    lastAction:normalizeDate(p.lastAction),
+    nextAction:normalizeDate(p.nextAction),
+    notes:     migrateNotes(p)
+  };
 }
 
 /* ── SYNC ── */
